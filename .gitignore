@@ -1,0 +1,26 @@
+# R history files
+.Rhistory
+.Rapp.history
+
+# R session data files
+.RData
+.Ruserdata
+
+# RStudio project user files
+.Rproj.user/
+
+# .Rmd and HTML output files
+*.html
+*.pdf
+
+# Data
+data/
+
+# Output directories
+output/
+
+# Other generated files
+*.log
+*.bak
+*.swp
+

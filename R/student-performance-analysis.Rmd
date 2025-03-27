@@ -1,0 +1,164 @@
+---
+title: "Student Performance Analysis"
+author: "Farhana Taiyebah"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Introduction
+
+Why do some students perform better than others? Is study time really the key to success, or do factors like family support and failures in past subjects play a bigger role? This project analyzes student performance data to uncover the strongest predictors of academic success.
+
+# Dataset Information
+
+This dataset comes from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/320/student+performance) and was donated by Paulo Cortez and A. M. G. Silva in 2014. It consists of student achievement data from two Portuguese secondary schools and includes demographic, social, and academic factors. The dataset has been used in multiple studies to predict student performance using data mining techniques.
+
+- **Number of Instances**: 649 students
+- **Number of Features**: 30
+- **Subject Areas**: Mathematics and Portuguese Language
+- **Main Tasks**: Classification, Regression
+- **Data Source**: School reports and questionnaires
+- **Original Study**: *Using data mining to predict secondary school student performance* by P. Cortez & A. M. G. Silva (2008)
+- **License**: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The dataset contains attributes such as student grades (`G1`, `G2`, `G3`), demographic details (`age`, `sex`, `famsize`), parental education and job information (`Medu`, `Fedu`, `Mjob`, `Fjob`), and behavioral factors (`studytime`, `failures`, `absences`).
+
+For this analysis, I have chosen to work only with the Mathematics dataset (`student-mat.csv`). This decision was made to maintain a focused analysis and avoid potential inconsistencies when merging two datasets with different subject areas. Additionally, analyzing a single subject allows for deeper insights into factors affecting student performance in Mathematics without introducing subject-specific biases.
+
+# Setup
+
+```{r setup, echo=TRUE}
+# Install and load required packages
+if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+if (!requireNamespace("readr", quietly = TRUE)) install.packages("readr")
+if (!requireNamespace("knitr", quietly = TRUE)) install.packages("knitr")
+if (!requireNamespace("rmarkdown", quietly = TRUE)) install.packages("rmarkdown")
+
+library(tidyverse)
+
+# Define file path for cached dataset
+cached_file <- "../output/student_mat_clean.rds"
+
+if (file.exists(cached_file)) {
+  # Load the preprocessed dataset if it exists
+  data_mat_clean <- readRDS(cached_file)
+  message("Loaded cached dataset.")
+} else {
+  # Load raw data
+  data_mat <- read.csv("../data/student-mat.csv", sep=";")
+  
+  # Data cleaning: Convert categorical variables to factors
+  data_mat_clean <- data_mat %>%
+    mutate(across(where(is.character), as.factor))
+  
+  # Save cleaned dataset
+  saveRDS(data_mat_clean, cached_file)
+  message("Processed and cached dataset.")
+}
+```
+
+# 1. Exploratory Data Analysis (EDA)
+
+The goal of this section is to explore the dataset, understand its structure, and check for any missing or unusual data points.
+
+```{r eda, echo=TRUE}
+# Check summary statistics and structure of the data
+summary(data_mat_clean)
+str(data_mat_clean)
+
+# Check for missing values
+colSums(is.na(data_mat_clean))
+
+# Distribution of final grades
+ggplot(data_mat_clean, aes(x = G3)) + 
+  geom_histogram(binwidth = 1, fill = "lightseagreen", color = "coral") + 
+  theme_minimal() + 
+  labs(title = "Distribution of Final Grade (G3)")
+```
+<br>
+Most students score between 8 and 14, with some outliers on both ends.
+<br>
+
+```{r eda-2, echo=TRUE}
+# Correlation between first and second period grades
+ggplot(data_mat_clean, aes(x = G1, y = G2)) + 
+  geom_point() + 
+  theme_minimal() + 
+  labs(title = "G1 vs G2")
+
+```
+<br>
+Strong correlation between G1 and G2 suggests that past performance is a reliable indicator of future performance.
+<br>
+
+# 2. Data Cleaning
+
+This section covers cleaning the data by handling missing values and converting categorical variables into factors.
+
+```{r data-cleaning, echo=TRUE}
+# Data already cleaned and loaded from cache, but if not cleaned yet:
+data_mat_clean <- data_mat %>%
+  mutate(across(where(is.character), as.factor))
+
+# Save cleaned dataset
+saveRDS(data_mat_clean, cached_file)
+message("Processed and cached dataset.")
+```
+
+# 3. Correlation Analysis
+
+We analyze correlations between numerical variables to explore relationships that might help predict the final grade (G3).
+
+```{r correlation-analysis, echo=TRUE}
+# Calculate correlation matrix for numeric columns
+numeric_data <- data_mat_clean %>% select(G1, G2, G3, absences)
+cor_matrix <- cor(numeric_data)
+print(cor_matrix)
+
+
+```
+G2 has the strongest correlation with G3, followed by G1. Absences have almost no correlation with final grades.
+
+# 4. Statistical Model
+
+We build a linear regression model to predict the final grade (G3) based on other features like G1, G2, and absences.
+
+```{r regression-model, echo=TRUE}
+# Build a linear regression model to predict G3
+model <- lm(G3 ~ G1 + G2 + failures + studytime + absences, data = data_mat_clean)
+summary(model)
+```
+
+# 5. Data Visualization
+
+```{r data-visualization, echo=TRUE}
+# Study Time vs Final Grade
+ggplot(data_mat_clean, aes(x = factor(studytime), y = G3)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Does More Study Time Guarantee Better Grades?",
+       x = "Study Time Level", y = "Final Grade (G3)") +
+  theme_minimal()
+
+# Failures vs Final Grade
+ggplot(data_mat_clean, aes(x = factor(failures), y = G3)) +
+  geom_boxplot(fill = "salmon") +
+  labs(title = "The Impact of Past Failures on Final Grades",
+       x = "Number of Past Failures", y = "Final Grade (G3)") +
+  theme_minimal()
+```
+
+# Conclusion
+
+This analysis shows that a student's past grades are the strongest predictors of their final performance. Surprisingly, study time had little impact on final grades, suggesting that effective learning strategies may be more important than simply spending hours studying. Additionally, students with past failures tend to struggle significantly, highlighting the need for early interventions. Future research could explore whether external support systems (such as tutoring or parental involvement) play a role in improving student outcomes.
+
+# Rendering the R Markdown File
+
+```{r render-html, eval=FALSE}
+# To render the .Rmd file into an HTML report, use the following command:
+rmarkdown::render("R/student-performance-analysis.Rmd", 
+                  output_format = "html_document", 
+                  output_file = "../output/student-performance-analysis.html")
+
+```
