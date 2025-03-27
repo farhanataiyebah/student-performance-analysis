@@ -24,3 +24,9 @@ output/
 *.bak
 *.swp
 
+# Ignore everything in the output folder
+output/*
+
+# But do not ignore the PDF file
+!output/student-performance-analysis.pdf
+
