@@ -32,6 +32,13 @@ The analysis involves:
 4. **Regression Model**: Predicting final grades using a linear regression model.
 5. **Data Visualization**: Visualizing relationships between study time, failures, and final grades.
 
+## View the Analysis
+
+You can view the analysis report in PDF format by clicking the link below:
+
+[Download the Analysis PDF](https://github.com/farhanataiyebah/student-performance-analysis/blob/master/output/student-performance-analysis.pdf)
+
+
 ## Requirements
 
 The project uses the following R packages:
