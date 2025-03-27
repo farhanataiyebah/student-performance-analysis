@@ -19,6 +19,7 @@ student-performance-analysis/
 │   └── student-performance-analysis.Rmd
 ├── output/
 │   └── student-performance-analysis.html  # This file is generated after knitting the Rmd
+│   └── student-performance-analysis.pdf
 ├── .gitignore
 └── README.md
 ```
